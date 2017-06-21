@@ -1,55 +1,68 @@
 
-int stripSensor = 2;
-unsigned long lastUpdate = 0;
-int lastValue = 0;
+int stripIRSensor = 2;
+int hallSensor = 3;
+int hall2Sensor = 4;
+
+int lastValueIR = 0;
+int lastValueHall = 0;
+int lastValueHall2 = 0;
+
+int stripsTravelledLastSecIR = 0;
+int stripsTravelledLastSecHall = 0;
+int stripsTravelledLastSecHall2 = 0;
+
 unsigned long int timeElapsed = 0;
 
 // the setup routine runs once when you press reset:
 void setup() {
   Serial.begin(9600);
-  pinMode(stripSensor, INPUT);
+  pinMode(stripIRSensor, INPUT);
+  pinMode(hallSensor, INPUT);
+  pinMode(hall2Sensor, INPUT);
   timeElapsed = micros();
 }
 
-int last_delta;
-int stripsTravelledLastSec = 0;
+//int last_delta;
+
 
 // the loop routine runs over and over again forever:
 void loop() {
-  int stripSensorResult = digitalRead(stripSensor);
-  int delta;
-  if(lastValue != stripSensorResult)
+  int stripIRSensorResult = digitalRead(stripIRSensor);
+  int stripHallSensorResult = digitalRead(hallSensor);
+  int stripHall2SensorResult = digitalRead(hall2Sensor);
+  
+  if(lastValueIR != stripIRSensorResult)
   {
-    stripsTravelledLastSec++;
-    lastValue = stripSensorResult;
-    delta = micros()/100 - lastUpdate;
-    lastUpdate = micros()/100;
+    stripsTravelledLastSecIR++;
+    lastValueIR = stripIRSensorResult;
+  }
 
-    //Added code to minimise false reportings if this delta is drastically different than the last
-//    if(abs(delta - last_delta) > last_delta * .75 )
-//    {   
-//      Serial.print("===>");
-//      Serial.print(',');   
-//      Serial.print(delta);
-//      Serial.print(',');
-//      Serial.print(last_delta);
-//      Serial.print(',');
-//      Serial.println(delta - last_delta
-//      );
-//      last_delta = delta;
-//      //return;
-//     }
-    last_delta = delta;
+  if(lastValueHall != stripHallSensorResult)
+  {
+    stripsTravelledLastSecHall++;
+    lastValueHall = stripHallSensorResult;
+  }
+
+  if(lastValueHall2 != stripHall2SensorResult)
+  {
+    stripsTravelledLastSecHall2++;
+    lastValueHall2 = stripHall2SensorResult;
+  }  
+  
+  if(micros() - timeElapsed >= 10000)
+  { 
+    String data = String(stripsTravelledLastSecIR) + ","+ String(stripsTravelledLastSecHall + 5) 
+    + "," + String(stripsTravelledLastSecHall2 + 10) 
+    +  "," + String(stripsTravelledLastSecHall - stripsTravelledLastSecHall2)
+    ;
+    Serial.println(data);
+    stripsTravelledLastSecIR = 0;
+    stripsTravelledLastSecHall = 0;
+    stripsTravelledLastSecHall2 = 0;
+    timeElapsed = micros();
   }
   
-  if(micros() - timeElapsed >= 200000)
-  {      
-    Serial.println(stripsTravelledLastSec);
-//    Serial.print(',');
-//    Serial.println(micros() - timeElapsed);
-      stripsTravelledLastSec = 0;
-      timeElapsed = micros();
-  }
-//  else
-//    Serial.println("0");
+//  unsigned long int b = micros();
+//  String data = String(b-a) ;//+ "   " +String(a)+ "   " +String(b);
+//  Serial.println(data);
 }
